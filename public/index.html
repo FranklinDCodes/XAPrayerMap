@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Map</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <style>
+        #map { height: 100vh; }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    <script>
+        const socket = io();
+        let currentSelectedCountry = null;  // Track the currently selected country
+
+        // Initialize the map
+        const map = L.map('map').setView([20, 0], 2);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Track countries' shading states
+        fetch('https://raw.githubusercontent.com/johan/world.geo.json/master/countries.geo.json')
+            .then(response => response.json())
+            .then(geojson => {
+                const geoLayer = L.geoJSON(geojson, {
+                    onEachFeature: (feature, layer) => {
+                        const countryId = feature.id;
+
+                        // Listen for clicks on each country
+                        layer.on('click', () => {
+                            if (!layer.options.interactive || currentSelectedCountry === countryId) return;
+
+                            // If a country is already selected, unselect it
+                            if (currentSelectedCountry) {
+                                socket.emit('unselectCountry', { country: currentSelectedCountry });
+                            }
+
+                            // Set the current selected country
+                            currentSelectedCountry = countryId;
+
+                            // Shade the new country
+                            socket.emit('shadeCountry', { country: countryId });
+
+                            // Save the selected country to localStorage
+                            localStorage.setItem('lastSelectedCountry', countryId);
+                        });
+                    }
+                }).addTo(map);
+
+                // Update country shading from the server
+                socket.on('updateCountry', (data) => {
+                    geoLayer.eachLayer((layer) => {
+                        if (layer.feature.id === data.country) {
+                            const opacity = data.opacity / 100;  // Convert to 0-1
+                            layer.setStyle({
+                                fillColor: '#FF0000',
+                                fillOpacity: opacity,
+                            });
+
+                            // Disable interaction if fully shaded
+                            if (data.opacity === 100) {
+                                layer.options.interactive = false;
+                            }
+                        }
+                    });
+                });
+
+                // Initialize the map with the current state
+                socket.on('init', (states) => {
+                    Object.keys(states).forEach((countryId) => {
+                        geoLayer.eachLayer((layer) => {
+                            if (layer.feature.id === countryId) {
+                                const opacity = states[countryId].opacity / 100;
+                                layer.setStyle({
+                                    fillColor: '#FF0000',
+                                    fillOpacity: opacity,
+                                });
+
+                                // Disable interaction if fully shaded
+                                if (states[countryId].opacity === 100) {
+                                    layer.options.interactive = false;
+                                }
+                            }
+                        });
+                    });
+                });
+
+                // On page load, check if there is a last clicked country in localStorage
+                const lastClickedCountry = localStorage.getItem('lastSelectedCountry');
+                if (lastClickedCountry) {
+                    // Unclick the last clicked country when the page is reloaded
+                    socket.emit('unselectCountry', { country: lastClickedCountry });
+                }
+            });
+    </script>
+</body>
+</html>
