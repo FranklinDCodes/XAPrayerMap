@@ -7,47 +7,49 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server);
 
-// In-memory store to keep track of the shading state for each country
+// In-memory store to track the opacity state of countries
 let countriesState = {};
 
 // Serve static files (HTML, CSS, JS)
 app.use(express.static('public'));
 
-// Listen for connections from clients
+// When a new user connects
 io.on('connection', (socket) => {
     console.log('A user connected');
 
-    // Initialize the client with the current countries' shading states
+    // Send the current state to the newly connected user
     socket.emit('init', countriesState);
 
-    // Handle shading a country (increment opacity by 25%)
+    // When a user shades a country (increases opacity by 25%)
     socket.on('shadeCountry', (data) => {
         const { country } = data;
-        
+
         // Get the current opacity or default to 0
         let opacity = countriesState[country] || 0;
 
-        // Increment opacity by 25%
+        // Increment opacity by 25%, but cap it at 100%
         if (opacity < 100) {
             opacity += 25;
         }
 
-        // Update the country state in memory
+        // Update the opacity state
         countriesState[country] = opacity;
 
-        // Broadcast the updated opacity to all connected clients
+        // Broadcast the updated opacity to all clients
         io.emit('updateCountry', { country, opacity });
     });
 
-    // Handle unselecting a country (reset opacity to 0)
+    // When a user selects a new country, unselect the previous country (decrease opacity by 25%)
     socket.on('unselectCountry', (data) => {
         const { country } = data;
-
-        // Reset the opacity of the country
-        countriesState[country] = 0;
+        
+        // Reset opacity of previously selected country (decrease by 25%)
+        if (countriesState[country] > 0) {
+            countriesState[country] -= 25;
+        }
 
         // Broadcast the reset to all clients
-        io.emit('updateCountry', { country, opacity: 0 });
+        io.emit('updateCountry', { country, opacity: countriesState[country] });
     });
 
     // Handle disconnect event (optional)
