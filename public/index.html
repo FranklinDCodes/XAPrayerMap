@@ -15,7 +15,6 @@
     <div id="map"></div>
     <script>
         const socket = io();
-        let currentSelectedCountry = null;  // Track the currently selected country
 
         // Initialize the map
         const map = L.map('map').setView([20, 0], 2);
@@ -24,7 +23,7 @@
             attribution: '&copy; OpenStreetMap contributors'
         }).addTo(map);
 
-        // Track countries' shading states
+        // Load country boundaries (replace with actual GeoJSON file)
         fetch('https://raw.githubusercontent.com/johan/world.geo.json/master/countries.geo.json')
             .then(response => response.json())
             .then(geojson => {
@@ -32,22 +31,21 @@
                     onEachFeature: (feature, layer) => {
                         const countryId = feature.id;
 
-                        // Listen for clicks on each country
+                        // Listen for clicks
                         layer.on('click', () => {
-                            if (!layer.options.interactive || currentSelectedCountry === countryId) return;
+                            if (!layer.options.interactive) return; // Skip if not interactive
 
-                            // If a country is already selected, unselect it
-                            if (currentSelectedCountry) {
-                                socket.emit('unselectCountry', { country: currentSelectedCountry });
+                            // Get the last selected country from localStorage
+                            const lastSelectedCountry = localStorage.getItem('lastSelectedCountry');
+                            if (lastSelectedCountry && lastSelectedCountry !== countryId) {
+                                // Unselect the last selected country
+                                socket.emit('unselectCountry', { country: lastSelectedCountry });
                             }
 
-                            // Set the current selected country
-                            currentSelectedCountry = countryId;
-
-                            // Shade the new country
+                            // Shade the new selected country
                             socket.emit('shadeCountry', { country: countryId });
 
-                            // Save the selected country to localStorage
+                            // Save the new selection in localStorage
                             localStorage.setItem('lastSelectedCountry', countryId);
                         });
                     }
@@ -57,7 +55,7 @@
                 socket.on('updateCountry', (data) => {
                     geoLayer.eachLayer((layer) => {
                         if (layer.feature.id === data.country) {
-                            const opacity = data.opacity / 100;  // Convert to 0-1
+                            const opacity = data.opacity / 100; // Convert to 0-1
                             layer.setStyle({
                                 fillColor: '#FF0000',
                                 fillOpacity: opacity,
@@ -76,27 +74,20 @@
                     Object.keys(states).forEach((countryId) => {
                         geoLayer.eachLayer((layer) => {
                             if (layer.feature.id === countryId) {
-                                const opacity = states[countryId].opacity / 100;
+                                const opacity = states[countryId] / 100;
                                 layer.setStyle({
                                     fillColor: '#FF0000',
                                     fillOpacity: opacity,
                                 });
 
                                 // Disable interaction if fully shaded
-                                if (states[countryId].opacity === 100) {
+                                if (states[countryId] === 100) {
                                     layer.options.interactive = false;
                                 }
                             }
                         });
                     });
                 });
-
-                // On page load, check if there is a last clicked country in localStorage
-                const lastClickedCountry = localStorage.getItem('lastSelectedCountry');
-                if (lastClickedCountry) {
-                    // Unclick the last clicked country when the page is reloaded
-                    socket.emit('unselectCountry', { country: lastClickedCountry });
-                }
             });
     </script>
 </body>

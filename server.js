@@ -1,74 +1,58 @@
 const express = require('express');
 const http = require('http');
 const socketIo = require('socket.io');
+
+// Create the server
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server);
 
-let countryStates = {};  // Track the shading state for each country
-let userSelections = {}; // Track each user's selected country by socket ID
+// In-memory store to keep track of the shading state for each country
+let countriesState = {};
 
-// Serve static files (index.html, etc.)
+// Serve static files (HTML, CSS, JS)
 app.use(express.static('public'));
 
-// Listen for client connections
+// Listen for connections from clients
 io.on('connection', (socket) => {
-    console.log('a user connected');
+    console.log('A user connected');
 
-    // Send the current shading state to the newly connected user
-    socket.emit('init', countryStates);
+    // Initialize the client with the current countries' shading states
+    socket.emit('init', countriesState);
 
-    // Handle shading a country
+    // Handle shading a country (increment opacity by 25%)
     socket.on('shadeCountry', (data) => {
         const { country } = data;
+        
+        // Get the current opacity or default to 0
+        let opacity = countriesState[country] || 0;
 
-        // If the country is already selected by the user, don't allow re-selection
-        if (userSelections[socket.id] === country) return;
-
-        // If the user already has a selected country, unselect it
-        if (userSelections[socket.id]) {
-            const previousCountry = userSelections[socket.id];
-            socket.emit('unselectCountry', { country: previousCountry });
+        // Increment opacity by 25%
+        if (opacity < 100) {
+            opacity += 25;
         }
 
-        // Shade the new country
-        if (!countryStates[country]) {
-            countryStates[country] = { opacity: 0 };
-        }
+        // Update the country state in memory
+        countriesState[country] = opacity;
 
-        if (countryStates[country].opacity < 100) {
-            countryStates[country].opacity += 25;
-        }
-
-        userSelections[socket.id] = country;  // Store the country for this user
-
-        // Broadcast the updated state to all connected clients
-        io.emit('updateCountry', {
-            country,
-            opacity: countryStates[country].opacity,
-        });
+        // Broadcast the updated opacity to all connected clients
+        io.emit('updateCountry', { country, opacity });
     });
 
-    // Handle unselecting a country
+    // Handle unselecting a country (reset opacity to 0)
     socket.on('unselectCountry', (data) => {
         const { country } = data;
-        if (countryStates[country]) {
-            // Reset opacity to 0% (unclicked)
-            countryStates[country].opacity = 0;
 
-            // Broadcast the update to all clients
-            io.emit('updateCountry', {
-                country,
-                opacity: 0,
-            });
-        }
+        // Reset the opacity of the country
+        countriesState[country] = 0;
+
+        // Broadcast the reset to all clients
+        io.emit('updateCountry', { country, opacity: 0 });
     });
 
-    // Handle user disconnect
+    // Handle disconnect event (optional)
     socket.on('disconnect', () => {
-        console.log('user disconnected');
-        // When the user disconnects, clear their selection from the userSelections object
-        delete userSelections[socket.id];
+        console.log('User disconnected');
     });
 });
 
