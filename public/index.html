@@ -50,6 +50,11 @@
                         // Add interactivity: only allow interaction if opacity < 100
                         if (opacity < 100) {
                             layer.on('click', () => {
+                                // Prevent clicking the same country twice
+                                if (lastSelectedCountry === countryId) {
+                                    return;
+                                }
+
                                 // Emit the current country selection
                                 if (lastSelectedCountry && lastSelectedCountry !== countryId) {
                                     socket.emit('unselectCountry', { country: lastSelectedCountry });
