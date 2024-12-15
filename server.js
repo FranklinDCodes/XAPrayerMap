@@ -19,6 +19,7 @@ io.on('connection', (socket) => {
     console.log('A user connected');
 
     // Send the current state to the newly connected user
+    console.log(countriesState);
     socket.emit('init', countriesState);
 
     // Handle user shading a country

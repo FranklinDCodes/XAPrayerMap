@@ -17,6 +17,17 @@
         const socket = io();
         let lastSelectedCountry = localStorage.getItem('lastSelectedCountry'); // Retrieve last selected country
 
+        //  SETTINGS
+        //  ********************************************************
+
+        //  color for shading
+        const SHADE_COLOR = "#0e730a";
+
+        //  color for shading
+        const MAX_CLICKS = 4;
+
+        //  ********************************************************
+
         socket.on('connect', () => {
             if (lastSelectedCountry) {
                 socket.emit('reconnectSync', { country: lastSelectedCountry });
@@ -46,7 +57,7 @@
 
                         // Set the initial style for the country
                         layer.setStyle({
-                            fillColor: '#FF0000', // Red fill color
+                            fillColor: SHADE_COLOR, // fill color
                             fillOpacity: opacity / 100, // Set opacity between 0 and 1
                             weight: 2, // Set border weight
                             color: '#000', // Border color
@@ -92,7 +103,7 @@
                         if (layer.feature.id === data.country) {
                             const opacity = data.opacity / 100; // Convert to 0-1
                             layer.setStyle({
-                                fillColor: '#FF0000',
+                                fillColor: SHADE_COLOR,
                                 fillOpacity: opacity,
                             });
 
@@ -113,7 +124,7 @@
                             if (layer.feature.id === countryId) {
                                 const opacity = states[countryId] / 100;
                                 layer.setStyle({
-                                    fillColor: '#FF0000',
+                                    fillColor: SHADE_COLOR,
                                     fillOpacity: opacity,
                                 });
 
@@ -129,9 +140,6 @@
                     if (lastSelectedCountry) {
                         geoLayer.eachLayer((layer) => {
                             if (layer.feature.id === lastSelectedCountry) {
-                                layer.setStyle({
-                                    fillOpacity: 0.25, // Set as selected
-                                });
                                 layer.options.interactive = false; // Disable interaction
                             }
                         });
