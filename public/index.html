@@ -61,16 +61,10 @@
         // Initialize the map
         const map = L.map('map').setView([20, 0], 2);
 
-        /*
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; OpenStreetMap contributors',
-        }).addTo(map);
-        */
-
+        // set english map names and attribution
         L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
             attribution: '&copy; <a href="https://carto.com/" target="_blank">CARTO</a> &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap contributors</a>'
         }).addTo(map);
-
 
         // Initialize an empty object to store the countries and their shading status
         let countriesState = {};
