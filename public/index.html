@@ -17,16 +17,22 @@
         const socket = io();
         let lastSelectedCountry = localStorage.getItem('lastSelectedCountry'); // Retrieve last selected country
 
+
+
         //  SETTINGS
+
+        //  ********************************************************
         //  ********************************************************
 
         //  color for shading
         const SHADE_COLOR = "#0e730a";
 
         //  color for shading
-        const MAX_CLICKS = 4;
+        const MAX_CLICKS = 3;
 
         //  ********************************************************
+        //  ********************************************************
+
 
         socket.on('connect', () => {
             if (lastSelectedCountry) {
@@ -76,7 +82,7 @@
                                 geoLayer.eachLayer((prevLayer) => {
                                     if (prevLayer.feature.id === lastSelectedCountry) {
                                         prevLayer.setStyle({
-                                            fillOpacity: 0.25, // Unshade the previous country
+                                            fillOpacity: 1 / MAX_CLICKS, // Unshade the previous country
                                         });
                                     }
                                 });
@@ -91,7 +97,7 @@
 
                             // Update the current country's style
                             layer.setStyle({
-                                fillOpacity: 0.25, // Visually show as selected
+                                fillOpacity: 1 / MAX_CLICKS, // Visually show as selected
                             });
                         });
                     },

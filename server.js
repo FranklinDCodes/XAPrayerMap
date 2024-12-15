@@ -1,3 +1,20 @@
+
+
+        
+//  SETTINGS
+
+//  ********************************************************
+//  ********************************************************
+
+//  color for shading
+const MAX_CLICKS = 3;
+
+// max clicks should match setting in index.html
+
+//  ********************************************************
+//  ********************************************************
+
+
 const express = require('express');
 const http = require('http');
 const socketIo = require('socket.io');
@@ -19,7 +36,6 @@ io.on('connection', (socket) => {
     console.log('A user connected');
 
     // Send the current state to the newly connected user
-    console.log(countriesState);
     socket.emit('init', countriesState);
 
     // Handle user shading a country
@@ -33,7 +49,7 @@ io.on('connection', (socket) => {
         const previouslySelected = userSelections[socket.id];
         if (previouslySelected) {
             if (countriesState[previouslySelected] > 0) {
-                countriesState[previouslySelected] -= 25;
+                countriesState[previouslySelected] -= 100 / MAX_CLICKS;
                 io.emit('updateCountry', {
                     country: previouslySelected,
                     opacity: countriesState[previouslySelected],
@@ -43,7 +59,7 @@ io.on('connection', (socket) => {
 
         let opacity = countriesState[country] || 0;
         if (opacity < 100) {
-            opacity += 25;
+            opacity += 100 / MAX_CLICKS;
             countriesState[country] = opacity;
 
             io.emit('updateCountry', { country, opacity });
@@ -60,7 +76,7 @@ io.on('connection', (socket) => {
         const previouslySelected = userSelections[socket.id];
         if (previouslySelected && previouslySelected !== country) {
             if (countriesState[previouslySelected] > 0) {
-                countriesState[previouslySelected] -= 25;
+                countriesState[previouslySelected] -= 100 / MAX_CLICKS;
                 io.emit('updateCountry', {
                     country: previouslySelected,
                     opacity: countriesState[previouslySelected],
@@ -83,3 +99,5 @@ io.on('connection', (socket) => {
 server.listen(3000, () => {
     console.log('Server running on port 3000');
 });
+
+
