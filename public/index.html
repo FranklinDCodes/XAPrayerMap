@@ -8,15 +8,30 @@
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
     <style>
-        #map { height: 100vh; }
+        /* Ensure the map takes up full height without causing scroll */
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden; /* Prevent body overflow */
+        }
+        #map {
+            height: 100vh; /* Map takes full height */
+            width: 100%;   /* Map takes full width */
+        }
+    
+        /* Fix attribution styling */
+        .leaflet-control-attribution {
+            white-space: normal !important; /* Allow attribution text to wrap */
+            font-size: 12px; /* Adjust font size for better fitting */
+        }
     </style>
+    
 </head>
 <body>
     <div id="map"></div>
     <script>
-        const socket = io();
-        let lastSelectedCountry = localStorage.getItem('lastSelectedCountry'); // Retrieve last selected country
-
+    
 
 
         //  SETTINGS
@@ -34,6 +49,9 @@
         //  ********************************************************
 
 
+        const socket = io();
+        let lastSelectedCountry = localStorage.getItem('lastSelectedCountry'); // Retrieve last selected country
+
         socket.on('connect', () => {
             if (lastSelectedCountry) {
                 socket.emit('reconnectSync', { country: lastSelectedCountry });
@@ -43,9 +61,16 @@
         // Initialize the map
         const map = L.map('map').setView([20, 0], 2);
 
+        /*
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; OpenStreetMap contributors',
         }).addTo(map);
+        */
+
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; <a href="https://carto.com/" target="_blank">CARTO</a> &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap contributors</a>'
+        }).addTo(map);
+
 
         // Initialize an empty object to store the countries and their shading status
         let countriesState = {};
