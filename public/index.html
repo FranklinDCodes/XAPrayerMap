@@ -16,28 +16,28 @@
     <script>
         const socket = io();
         let lastSelectedCountry = localStorage.getItem('lastSelectedCountry'); // Store the last selected country
-
+    
         // Initialize the map
         const map = L.map('map').setView([20, 0], 2);
-
+    
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; OpenStreetMap contributors'
+            attribution: '&copy; OpenStreetMap contributors',
         }).addTo(map);
-
+    
         // Initialize an empty object to store the countries and their shading status
         let countriesState = {};
-
+    
         // Load country boundaries (replace with actual GeoJSON file)
         fetch('https://raw.githubusercontent.com/johan/world.geo.json/master/countries.geo.json')
-            .then(response => response.json())
-            .then(geojson => {
+            .then((response) => response.json())
+            .then((geojson) => {
                 const geoLayer = L.geoJSON(geojson, {
                     onEachFeature: (feature, layer) => {
                         const countryId = feature.id;
-                        
+    
                         // Default opacity is 0
                         let opacity = countriesState[countryId] || 0;
-
+    
                         // Set the initial style for the country
                         layer.setStyle({
                             fillColor: '#FF0000', // Red fill color
@@ -46,40 +46,52 @@
                             color: '#000', // Border color
                             dashArray: '3', // Dashed border style
                         });
-
-                        // Add interactivity: only allow interaction if opacity < 100
-                        if (opacity < 100) {
-                            layer.on('click', () => {
-                                // Prevent clicking the same country twice
-                                if (lastSelectedCountry === countryId) {
-                                    return;
-                                }
-
-                                // Emit the current country selection
-                                if (lastSelectedCountry && lastSelectedCountry !== countryId) {
-                                    socket.emit('unselectCountry', { country: lastSelectedCountry });
-                                }
-
-                                // Shade the new selected country
-                                socket.emit('shadeCountry', { country: countryId });
-
-                                // Store the selected country in localStorage
-                                localStorage.setItem('lastSelectedCountry', countryId);
-
-                                // Update last selected country in the session
-                                lastSelectedCountry = countryId;
-                            });
-                        }
-
-                        // Disable interaction if fully shaded
-                        if (opacity === 100) {
+    
+                        // If the country is already selected by this user, prevent it from further shading
+                        if (countryId === lastSelectedCountry) {
                             layer.options.interactive = false;
                         } else {
                             layer.options.interactive = true;
                         }
-                    }
+    
+                        // Add interactivity: only allow interaction if opacity < 100
+                        layer.on('click', () => {
+                            // Prevent clicking the same country twice
+                            if (lastSelectedCountry === countryId) {
+                                return;
+                            }
+    
+                            // Emit the current country selection
+                            socket.emit('shadeCountry', { country: countryId });
+    
+                            // Deselect the previous country visually
+                            if (lastSelectedCountry) {
+                                geoLayer.eachLayer((prevLayer) => {
+                                    if (prevLayer.feature.id === lastSelectedCountry) {
+                                        prevLayer.setStyle({
+                                            fillColor: '#FF0000',
+                                            fillOpacity: 0, // Unshaded
+                                        });
+                                        prevLayer.options.interactive = true; // Re-enable interaction
+                                    }
+                                });
+                            }
+    
+                            // Store the selected country in localStorage
+                            localStorage.setItem('lastSelectedCountry', countryId);
+    
+                            // Update last selected country in the session
+                            lastSelectedCountry = countryId;
+    
+                            // Update the current country's style
+                            layer.setStyle({
+                                fillOpacity: 0.25, // Visually show as selected
+                            });
+                            layer.options.interactive = false; // Disable further interaction for this layer
+                        });
+                    },
                 }).addTo(map);
-
+    
                 // Update country shading from the server
                 socket.on('updateCountry', (data) => {
                     geoLayer.eachLayer((layer) => {
@@ -89,7 +101,7 @@
                                 fillColor: '#FF0000',
                                 fillOpacity: opacity,
                             });
-
+    
                             // Disable interaction if fully shaded
                             if (data.opacity === 100) {
                                 layer.options.interactive = false;
@@ -99,7 +111,7 @@
                         }
                     });
                 });
-
+    
                 // Initialize the map with the current state
                 socket.on('init', (states) => {
                     Object.keys(states).forEach((countryId) => {
@@ -110,7 +122,7 @@
                                     fillColor: '#FF0000',
                                     fillOpacity: opacity,
                                 });
-
+    
                                 // Disable interaction if fully shaded
                                 if (states[countryId] === 100) {
                                     layer.options.interactive = false;
@@ -118,8 +130,20 @@
                             }
                         });
                     });
+    
+                    // Highlight the user's previous selection
+                    if (lastSelectedCountry) {
+                        geoLayer.eachLayer((layer) => {
+                            if (layer.feature.id === lastSelectedCountry) {
+                                layer.setStyle({
+                                    fillOpacity: 0.25, // Set as selected
+                                });
+                                layer.options.interactive = false; // Disable interaction
+                            }
+                        });
+                    }
                 });
             });
-    </script>
+    </script>    
 </body>
 </html>

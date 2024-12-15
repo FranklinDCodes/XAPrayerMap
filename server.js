@@ -25,9 +25,8 @@ io.on('connection', (socket) => {
     socket.on('shadeCountry', (data) => {
         const { country } = data;
 
-        // Check if the user has already affected this country
+        // If the country is already selected by this user, do nothing
         if (userSelections[socket.id] === country) {
-            // Do nothing if the user clicks the same country
             return;
         }
 
