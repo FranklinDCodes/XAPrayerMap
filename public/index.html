@@ -15,6 +15,13 @@
     <div id="map"></div>
     <script>
         const socket = io();
+
+        socket.on('connect', () => {
+            if (lastSelectedCountry) {
+                socket.emit('reconnectSync', { country: lastSelectedCountry });
+            }
+        });
+
         let lastSelectedCountry = localStorage.getItem('lastSelectedCountry'); // Store the last selected country
     
         // Initialize the map

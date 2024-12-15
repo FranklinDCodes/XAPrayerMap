@@ -21,16 +21,14 @@ io.on('connection', (socket) => {
     // Send the current state to the newly connected user
     socket.emit('init', countriesState);
 
-    // When a user shades a country
+    // Handle user shading a country
     socket.on('shadeCountry', (data) => {
         const { country } = data;
 
-        // If the country is already selected by this user, do nothing
         if (userSelections[socket.id] === country) {
-            return;
+            return; // Prevent double-shading the same country
         }
 
-        // Unselect the previously selected country (if any)
         const previouslySelected = userSelections[socket.id];
         if (previouslySelected) {
             if (countriesState[previouslySelected] > 0) {
@@ -42,27 +40,44 @@ io.on('connection', (socket) => {
             }
         }
 
-        // Shade the new selected country
         let opacity = countriesState[country] || 0;
         if (opacity < 100) {
             opacity += 25;
             countriesState[country] = opacity;
 
-            // Broadcast the updated opacity to all clients
             io.emit('updateCountry', { country, opacity });
 
-            // Update the user's selection
             userSelections[socket.id] = country;
         }
     });
 
-    // Handle disconnect event
+    // Handle synchronization on reconnect
+    socket.on('reconnectSync', (data) => {
+        const { country } = data;
+
+        // Get the user's previously selected country
+        const previouslySelected = userSelections[socket.id];
+        if (previouslySelected && previouslySelected !== country) {
+            if (countriesState[previouslySelected] > 0) {
+                countriesState[previouslySelected] -= 25;
+                io.emit('updateCountry', {
+                    country: previouslySelected,
+                    opacity: countriesState[previouslySelected],
+                });
+            }
+        }
+
+        // Update the server state for the user's current selection
+        userSelections[socket.id] = country;
+    });
+
+    // Handle disconnect
     socket.on('disconnect', () => {
         console.log('User disconnected');
-        // Remove user selection on disconnect
         delete userSelections[socket.id];
     });
 });
+
 
 // Start the server on port 3000
 server.listen(3000, () => {
