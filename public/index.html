@@ -148,7 +148,6 @@
                                     socket.emit('shadeCountry', { country: "--SML" });
                                     break;
                                 case "--SML":
-                                    console.log("sending request for somolia");
                                     socket.emit('shadeCountry', { country: "SOM" });
                                     break;
 
@@ -178,13 +177,11 @@
                 socket.on('updateCountry', (data) => {
                     geoLayer.eachLayer((layer) => {
 
-                        // need to unshade a somolia counterpart
-                        let somoliaBool = (data.country == "SOM" && prevLayer.feature.properties.name == "Somaliland") 
-                                            || (data.country == "--SML" && layer.feature.id == "SOM");
+                        // need to shade somaliland
+                        let somoliaBool = (data.country == "--SML" && layer.feature.properties.name == "Somaliland");
 
-                        // need to unshade a cyprus counterpart
-                        let cyprusBool = (data.country == "CYP" && prevLayer.feature.properties.name == "Northern Cyprus") 
-                                            || (data.country == "--CYN" && layer.feature.id == "CYP");
+                        // need to shade north cyprus
+                        let cyprusBool = (data.country == "--CYN" && layer.feature.properties.name == "Northern Cyprus");
 
                         if (layer.feature.id === data.country || somoliaBool || cyprusBool) {
                             const opacity = data.opacity / 100; // Convert to 0-1
@@ -227,11 +224,11 @@
                         geoLayer.eachLayer((layer) => {
 
                             // need to unshade a somolia counterpart
-                            let somoliaBool = (lastSelectedCountry == "SOM" && prevLayer.feature.properties.name == "Somaliland") 
+                            let somoliaBool = (lastSelectedCountry == "SOM" && layer.feature.properties.name == "Somaliland") 
                                                 || (lastSelectedCountry == "--SML" && layer.feature.id == "SOM");
 
                             // need to unshade a cyprus counterpart
-                            let cyprusBool = (lastSelectedCountry == "CYP" && prevLayer.feature.properties.name == "Northern Cyprus") 
+                            let cyprusBool = (lastSelectedCountry == "CYP" && layer.feature.properties.name == "Northern Cyprus") 
                                                 || (lastSelectedCountry == "--CYN" && layer.feature.id == "CYP");
 
 

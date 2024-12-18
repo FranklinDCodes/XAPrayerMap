@@ -89,7 +89,19 @@ io.on('connection', (socket) => {
         }
 
         const previouslySelected = userSelections[socket.id];
-        if (previouslySelected) {
+
+        // prevent previous selection deselection for --SML and --CYN
+
+        // need to protect a somolia counterpart
+        let somoliaBool = (previouslySelected == "SOM" && country == "--SML") 
+        || (previouslySelected == "--SML" && country == "SOM");
+
+        // need to protect a cyprus counterpart
+        let cyprusBool = (previouslySelected == "CYP" && country == "--CYN") 
+                    || (previouslySelected == "--CYN" && country == "CYP");
+
+        // if previous selection and it's not a counterpart to a linked country
+        if (previouslySelected && ! somoliaBool && ! cyprusBool) {
             if (countriesState[previouslySelected] > 0) {
                 countriesState[previouslySelected] -= (100 / MAX_CLICKS);
                 io.emit('updateCountry', {
