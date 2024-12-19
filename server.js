@@ -18,7 +18,7 @@ const fs = require('fs');
 
 //  color for shading
 // max clicks should match setting in index.html
-const MAX_CLICKS = 2;
+const MAX_CLICKS = 10;
 
 // state file
 const STATE_FILE = "state.json";
@@ -75,7 +75,7 @@ app.use(express.static('public'));
 
 // When a new user connects
 io.on('connection', (socket) => {
-    console.log('A user connected');
+    //console.log('A user connected');
 
     // Send the current state to the newly connected user
     socket.emit('init', countriesState);
@@ -209,7 +209,7 @@ io.on('connection', (socket) => {
 
     // Handle disconnect
     socket.on('disconnect', () => {
-        console.log('User disconnected');
+        //console.log('User disconnected');
         delete userSelections[socket.id];
     });
 });

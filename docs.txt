@@ -1,0 +1,12 @@
+
+
+
+Somaliland and Northern Cyprus are not recognized on most maps
+ - Both have a country code of -99 in the GeoJSON file
+ - Neither have a Joshua Project page
+ - I am making up country codes for them, just for the code
+ - I will add logic to make these countries behave in tandem with their counterparts
+ - Their codes must be removed from any country lists
+ - Their codes are --SML and --CYN respectively
+
+
