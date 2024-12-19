@@ -43,7 +43,7 @@
         const SHADE_COLOR = "#ff6a4d";
 
         //  color for shading
-        const MAX_CLICKS = 3;
+        const MAX_CLICKS = 2;
 
         //  ********************************************************
         //  ********************************************************
@@ -141,7 +141,7 @@
                             socket.emit('shadeCountry', { country: countryId });
                             
                             // shade counterpart for cyprus and somolia discrepency
-                            switch (countryId) {
+                            /*switch (countryId) {
 
                                 // somolia
                                 case "SOM":
@@ -159,16 +159,16 @@
                                     socket.emit('shadeCountry', { country: "CYP" });
                                     break;
 
-                            }
+                            }*/
 
                             // Store the selected country in localStorage
                             localStorage.setItem('lastSelectedCountry', countryId);
                             lastSelectedCountry = countryId;
 
                             // Update the current country's style
-                            layer.setStyle({
-                                fillOpacity: 1 / MAX_CLICKS, // Visually show as selected
-                            });
+                            //layer.setStyle({
+                            //    fillOpacity: 1 / MAX_CLICKS, // Visually show as selected
+                            //});
                         });
                     },
                 }).addTo(map);
@@ -179,11 +179,12 @@
 
                         // need to shade somaliland
                         let somoliaBool = (data.country == "--SML" && layer.feature.properties.name == "Somaliland");
-
+                        
                         // need to shade north cyprus
                         let cyprusBool = (data.country == "--CYN" && layer.feature.properties.name == "Northern Cyprus");
 
                         if (layer.feature.id === data.country || somoliaBool || cyprusBool) {
+
                             const opacity = data.opacity / 100; // Convert to 0-1
                             layer.setStyle({
                                 fillColor: SHADE_COLOR,
