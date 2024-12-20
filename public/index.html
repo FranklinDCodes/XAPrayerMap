@@ -43,7 +43,7 @@
         const SHADE_COLOR = "#ff6a4d";
 
         //  color for shading
-        const MAX_CLICKS = 2;
+        const MAX_CLICKS = 3;
 
         //  ********************************************************
         //  ********************************************************
@@ -141,7 +141,7 @@
                             socket.emit('shadeCountry', { country: countryId });
 
                             // Store the selected country in localStorage if country got clicked (wasn't at capacity)
-                            if (opacity === 100) {
+                            if (opacity !== 100) {
                                 localStorage.setItem('lastSelectedCountry', countryId);
                                 lastSelectedCountry = countryId;
                             }

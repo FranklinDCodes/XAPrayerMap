@@ -6,11 +6,6 @@ const socketIo = require('socket.io');
 const fs = require('fs');
 
 
-// Fix
-// countries get lighter when max clicked
-// previous countries deselect
-
-
 //  SETTINGS
 
 //  ********************************************************
@@ -18,10 +13,13 @@ const fs = require('fs');
 
 //  color for shading
 // max clicks should match setting in index.html
-const MAX_CLICKS = 2;
+const MAX_CLICKS = 3;
 
 // state file
 const STATE_FILE = "state.json";
+
+// interval in seconds of how frequent to save
+const SAVE_INTERVAL = 10;
 
 //  ********************************************************
 //  ********************************************************
@@ -45,30 +43,26 @@ function loadState() {
             userSelections = savedState.userSelections || {};
             console.log('State loaded from file.');
         } catch (error) {
-            console.error('Failed to load state:', error);
+            if (! (e instanceof SyntaxError)) {
+                console.error('Failed to load state:', error);
+            }
         }
     } else {
         console.log('No state file found. Starting fresh.');
     }
 }
 
-// Save current state to file
+// save shaded countries to file
 function saveState() {
-    const state = {
-        countriesState,
-        userSelections,
-    };
-    fs.writeFile(STATE_FILE, JSON.stringify(state, null, 2), (error) => {
-        if (error) {
-            console.error('Failed to save state:', error);
-        } else {
-            console.log('State saved successfully.');
-        }
-    });
+    const data = JSON.stringify({ countriesState, userSelections }, null, 2);
+    fs.writeFileSync(STATE_FILE, data);
 }
 
 // Load state on startup
 loadState();
+
+// Periodically save state
+setInterval(saveState, SAVE_INTERVAL);
 
 // Serve static files (HTML, CSS, JS)
 app.use(express.static('public'));
@@ -211,6 +205,20 @@ io.on('connection', (socket) => {
         //console.log('User disconnected');
         delete userSelections[socket.id];
     });
+});
+
+// Save state before shutting down
+process.on('SIGINT', () => {
+    console.log('Server shutting down...');
+    saveState();
+    process.exit();
+});
+
+// Save state before shutting down
+process.on('SIGTERM', () => {
+    console.log('Server shutting down...');
+    saveState(); // Save the state to file
+    process.exit(); // Exit the process
 });
 
 // Start the server on port 3000
