@@ -91,63 +91,80 @@
                         // Default opacity is 0
                         let opacity = countriesState[countryId] || 0;
 
-                        // Set the initial style for the country
-                        layer.setStyle({
-                            fillColor: SHADE_COLOR, // fill color
-                            fillOpacity: opacity / 100, // Set opacity between 0 and 1
-                            weight: 2, // Set border weight
-                            color: '#000', // Border color
-                            dashArray: '3', // Dashed border style
-                        });
+                        // check if one of the greyed out countries
+                        if (feature.id === "ATA" || feature.id === "ATF") {
 
-                        // Add interactivity: only allow interaction if opacity < 100
-                        layer.on('click', () => {
-                            // Check if the current layer is the same as the last selected country
-                            
-                            // need to unshade a somolia counterpart
-                            let somoliaBool = (lastSelectedCountry == "SOM" && countryId == "--SML") 
-                                                || (lastSelectedCountry == "--SML" && countryId == "SOM");
+                            // Set the initial style for the country
+                            layer.setStyle({
+                                fillColor: "#ffffff", // fill color
+                                fillOpacity: 0, // Set opacity between 0 and 1
+                                weight: 0, // Set border weight
+                                color: '#000', // Border color
+                                dashArray: '1', // Dashed border style
+                            });
 
-                            // need to unshade a cyprus counterpart
-                            let cyprusBool = (lastSelectedCountry == "CYP" && countryId == "--CYN") 
-                                                || (lastSelectedCountry == "--CYN" && countryId == "CYP");
+                        }
+                        else {    
 
-                            
-                            if (lastSelectedCountry === countryId || somoliaBool || cyprusBool) {
-                                return; // Don't allow re-shading the same country
-                            }
+                            // Set the initial style for the country
+                            layer.setStyle({
+                                fillColor: SHADE_COLOR, // fill color
+                                fillOpacity: opacity / 100, // Set opacity between 0 and 1
+                                weight: 2, // Set border weight
+                                color: '#000', // Border color
+                                dashArray: '3', // Dashed border style
+                            });
 
-                            // If the user selects another country, unshade the previously selected one
-                            if (lastSelectedCountry) {
-                                geoLayer.eachLayer((prevLayer) => {
+                            // Add interactivity: only allow interaction if opacity < 100
+                            layer.on('click', () => {
+                                // Check if the current layer is the same as the last selected country
+                                
+                                // need to unshade a somolia counterpart
+                                let somoliaBool = (lastSelectedCountry == "SOM" && countryId == "--SML") 
+                                                    || (lastSelectedCountry == "--SML" && countryId == "SOM");
 
-                                    // need to unshade a somolia counterpart
-                                    let somoliaBool = (lastSelectedCountry == "SOM" && prevLayer.feature.properties.name == "Somaliland") 
-                                                        || (lastSelectedCountry == "--SML" && prevLayer.feature.id == "SOM");
+                                // need to unshade a cyprus counterpart
+                                let cyprusBool = (lastSelectedCountry == "CYP" && countryId == "--CYN") 
+                                                    || (lastSelectedCountry == "--CYN" && countryId == "CYP");
 
-                                    // need to unshade a cyprus counterpart
-                                    let cyprusBool = (lastSelectedCountry == "CYP" && prevLayer.feature.properties.name == "Northern Cyprus") 
-                                                        || (lastSelectedCountry == "--CYN" && prevLayer.feature.id == "CYP");
+                                
+                                if (lastSelectedCountry === countryId || somoliaBool || cyprusBool) {
+                                    return; // Don't allow re-shading the same country
+                                }
 
-                                    if (prevLayer.feature.id === lastSelectedCountry || somoliaBool || cyprusBool) {
-                                        prevLayer.setStyle({
-                                            fillOpacity: 1 / MAX_CLICKS, // Unshade the previous country
-                                        });
-                                    }
-                                });
-                            }
+                                // If the user selects another country, unshade the previously selected one
+                                if (lastSelectedCountry) {
+                                    geoLayer.eachLayer((prevLayer) => {
 
-                            // Emit the current country selection
-                            socket.emit('shadeCountry', { country: countryId });
+                                        // need to unshade a somolia counterpart
+                                        let somoliaBool = (lastSelectedCountry == "SOM" && prevLayer.feature.properties.name == "Somaliland") 
+                                                            || (lastSelectedCountry == "--SML" && prevLayer.feature.id == "SOM");
 
-                            // Store the selected country in localStorage if country got clicked (wasn't at capacity)
-                            if (opacity !== 100) {
-                                localStorage.setItem('lastSelectedCountry', countryId);
-                                lastSelectedCountry = countryId;
-                            }
-                            
+                                        // need to unshade a cyprus counterpart
+                                        let cyprusBool = (lastSelectedCountry == "CYP" && prevLayer.feature.properties.name == "Northern Cyprus") 
+                                                            || (lastSelectedCountry == "--CYN" && prevLayer.feature.id == "CYP");
 
-                        });
+                                        if (prevLayer.feature.id === lastSelectedCountry || somoliaBool || cyprusBool) {
+                                            prevLayer.setStyle({
+                                                fillOpacity: 1 / MAX_CLICKS, // Unshade the previous country
+                                            });
+                                        }
+                                    });
+                                }
+
+                                // Emit the current country selection
+                                socket.emit('shadeCountry', { country: countryId });
+
+                                // Store the selected country in localStorage if country got clicked (wasn't at capacity)
+                                if (opacity !== 100) {
+                                    localStorage.setItem('lastSelectedCountry', countryId);
+                                    lastSelectedCountry = countryId;
+                                }
+                                
+
+                            });
+                    
+                        }
                     },
                 }).addTo(map);
 
