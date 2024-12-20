@@ -43,7 +43,7 @@
         const SHADE_COLOR = "#ff6a4d";
 
         //  color for shading
-        const MAX_CLICKS = 10;
+        const MAX_CLICKS = 2;
 
         //  ********************************************************
         //  ********************************************************
@@ -139,36 +139,14 @@
 
                             // Emit the current country selection
                             socket.emit('shadeCountry', { country: countryId });
+
+                            // Store the selected country in localStorage if country got clicked (wasn't at capacity)
+                            if (opacity === 100) {
+                                localStorage.setItem('lastSelectedCountry', countryId);
+                                lastSelectedCountry = countryId;
+                            }
                             
-                            // shade counterpart for cyprus and somolia discrepency
-                            /*switch (countryId) {
 
-                                // somolia
-                                case "SOM":
-                                    socket.emit('shadeCountry', { country: "--SML" });
-                                    break;
-                                case "--SML":
-                                    socket.emit('shadeCountry', { country: "SOM" });
-                                    break;
-
-                                // cyprus
-                                case "CYP":
-                                    socket.emit('shadeCountry', { country: "--CYN" });
-                                    break;
-                                case "--CYN":
-                                    socket.emit('shadeCountry', { country: "CYP" });
-                                    break;
-
-                            }*/
-
-                            // Store the selected country in localStorage
-                            localStorage.setItem('lastSelectedCountry', countryId);
-                            lastSelectedCountry = countryId;
-
-                            // Update the current country's style
-                            //layer.setStyle({
-                            //    fillOpacity: 1 / MAX_CLICKS, // Visually show as selected
-                            //});
                         });
                     },
                 }).addTo(map);

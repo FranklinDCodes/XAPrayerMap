@@ -2,7 +2,7 @@ config:
   target: "http://34.30.7.98:3000" # Replace with your server URL
   phases:
     - duration: 30
-      arrivalRate: 50 # Simulate 50 users per second
+      arrivalRate: 100 # Simulate 50 users per second
   engines:
     socketio: {}
 scenarios:
@@ -15,5 +15,5 @@ scenarios:
       - emit:
           channel: "reconnectSync"
           data:
-            country: "ARE"
+            country: "CYP"
       - think: 2

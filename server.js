@@ -18,7 +18,7 @@ const fs = require('fs');
 
 //  color for shading
 // max clicks should match setting in index.html
-const MAX_CLICKS = 10;
+const MAX_CLICKS = 2;
 
 // state file
 const STATE_FILE = "state.json";
@@ -84,107 +84,106 @@ io.on('connection', (socket) => {
     socket.on('shadeCountry', (data) => {
         const { country } = data;
 
-        const previouslySelected = userSelections[socket.id];
-
-        // prevent previous selection deselection for --SML and --CYN
-        // need to protect a somolia counterpart
-        let somaliaBool = (previouslySelected == "SOM" && country == "--SML") 
-                    || (previouslySelected == "--SML" && country == "SOM");
-
-        // need to protect a cyprus counterpart
-        let cyprusBool = (previouslySelected == "CYP" && country == "--CYN") 
-                    || (previouslySelected == "--CYN" && country == "CYP");
-
-        if (previouslySelected === country || somaliaBool || cyprusBool) {
-            return; // Prevent double-shading the same country
-        }
-
-        // if previous selection and it's not a counterpart to a linked country
-        if (previouslySelected) {
-            if (countriesState[previouslySelected] > 0) {
-                countriesState[previouslySelected] -= (100 / MAX_CLICKS);
-                io.emit('updateCountry', {
-                    country: previouslySelected,
-                    opacity: countriesState[previouslySelected],
-                });
-
-                // shade counterpart for cyprus and somolia discrepency
-                switch (previouslySelected) {
-
-                    // somolia
-                    case "SOM":
-                        countriesState["--SML"] -= (100 / MAX_CLICKS);
-                        io.emit('updateCountry', {
-                            country: "--SML",
-                            opacity: countriesState["--SML"],
-                        });
-                        break;
-                    case "--SML":
-                        countriesState["SOM"] -= (100 / MAX_CLICKS);
-                        io.emit('updateCountry', {
-                            country: "SOM",
-                            opacity: countriesState["SOM"],
-                        });
-                        break;
-
-                    // cyprus
-                    case "CYP":
-                        countriesState["--CYN"] -= (100 / MAX_CLICKS);
-                        io.emit('updateCountry', {
-                            country: "--CYN",
-                            opacity: countriesState["--CYN"],
-                        });
-                        break;
-                    case "--CYN":
-                        countriesState["CYP"] -= (100 / MAX_CLICKS);
-                        io.emit('updateCountry', {
-                            country: "CYP",
-                            opacity: countriesState["CYP"],
-                        });
-                        break;
-
-                }
-            }
-        }
-
-        // whether there is a second country to shade for somalia or cyprus
-        let secondData = null
-        switch (country) {
-
-            case "SOM":
-                secondData = { country: '--SML' };
-                break;
-            case "--SML":
-                secondData = { country: 'SOM' };
-                break;
-            case "CYP":
-                secondData = { country: '--CYN' };
-                break;
-            case "--CYN":
-                secondData = { country: 'CYP' };
-                break;
-        }
-
+        // before anything check if country is full
         let opacity = countriesState[country] || 0;
         if (opacity < 100) {
+
+            const previouslySelected = userSelections[socket.id];
+
+            // prevent previous selection deselection for --SML and --CYN
+            // need to protect a somolia counterpart
+            let somaliaBool = (previouslySelected == "SOM" && country == "--SML") 
+                        || (previouslySelected == "--SML" && country == "SOM");
+
+            // need to protect a cyprus counterpart
+            let cyprusBool = (previouslySelected == "CYP" && country == "--CYN") 
+                        || (previouslySelected == "--CYN" && country == "CYP");
+
+            if (previouslySelected === country || somaliaBool || cyprusBool) {
+                return; // Prevent double-shading the same country
+            }
+
+            // if previous selection and it's not a counterpart to a linked country
+            if (previouslySelected) {
+                if (countriesState[previouslySelected] > 0) {
+                    countriesState[previouslySelected] -= (100 / MAX_CLICKS);
+                    io.emit('updateCountry', {
+                        country: previouslySelected,
+                        opacity: countriesState[previouslySelected],
+                    });
+
+                    // shade counterpart for cyprus and somolia discrepency
+                    switch (previouslySelected) {
+
+                        // somolia
+                        case "SOM":
+                            countriesState["--SML"] -= (100 / MAX_CLICKS);
+                            io.emit('updateCountry', {
+                                country: "--SML",
+                                opacity: countriesState["--SML"],
+                            });
+                            break;
+                        case "--SML":
+                            countriesState["SOM"] -= (100 / MAX_CLICKS);
+                            io.emit('updateCountry', {
+                                country: "SOM",
+                                opacity: countriesState["SOM"],
+                            });
+                            break;
+
+                        // cyprus
+                        case "CYP":
+                            countriesState["--CYN"] -= (100 / MAX_CLICKS);
+                            io.emit('updateCountry', {
+                                country: "--CYN",
+                                opacity: countriesState["--CYN"],
+                            });
+                            break;
+                        case "--CYN":
+                            countriesState["CYP"] -= (100 / MAX_CLICKS);
+                            io.emit('updateCountry', {
+                                country: "CYP",
+                                opacity: countriesState["CYP"],
+                            });
+                            break;
+
+                    }
+                }
+            }
+
+            // whether there is a second country to shade for somalia or cyprus
+            let secondData = null
+            switch (country) {
+
+                case "SOM":
+                    secondData = { country: '--SML' };
+                    break;
+                case "--SML":
+                    secondData = { country: 'SOM' };
+                    break;
+                case "CYP":
+                    secondData = { country: '--CYN' };
+                    break;
+                case "--CYN":
+                    secondData = { country: 'CYP' };
+                    break;
+            }
+
+            // do the actual shading
             opacity += 100 / MAX_CLICKS;
             countriesState[country] = opacity;
-
             io.emit('updateCountry', { country, opacity });
-
             userSelections[socket.id] = country;
+                
+            // shade counterpart if needed
+            if (secondData !== null) {
+
+                const { country } = secondData;
+                countriesState[country] = opacity;
+                io.emit('updateCountry', { country, opacity });
+
+            }
         }
-
-        // shade counterpart if needed
-        if (secondData !== null) {
-
-            const { country } = secondData;
-            
-            countriesState[country] = opacity;
-            io.emit('updateCountry', { country, opacity });
-
-        }
-
     });
 
     // Handle synchronization on reconnect
