@@ -1,8 +1,8 @@
 config:
-  target: "http://34.30.7.98:3000" # Replace with your server URL
+  target: "http://34.57.6.170:3000" # Replace with your server URL
   phases:
     - duration: 60
-      arrivalRate: 200 # Simulate 50 users per second
+      arrivalRate: 200
   engines:
     socketio: {}
 scenarios:

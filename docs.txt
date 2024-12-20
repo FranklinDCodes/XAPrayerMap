@@ -1,6 +1,4 @@
 
-
-
 Somaliland and Northern Cyprus are not recognized on most maps
  - Both have a country code of -99 in the GeoJSON file
  - Neither have a Joshua Project page
@@ -9,4 +7,6 @@ Somaliland and Northern Cyprus are not recognized on most maps
  - Their codes must be removed from any country lists
  - Their codes are --SML and --CYN respectively
 
-
+ATA and ATF are antartic countries that have no Joshua Project pages
+ - Both have been removed by hardcoding blocks to them running the click command
+ - For asthetics I have removed their outlines also with this branching
